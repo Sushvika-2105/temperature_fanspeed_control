@@ -1,2 +1,50 @@
-hi 
-i am sushvika 
+int tempPin = A0;     // LM35 output pin
+int fan = 11;         // Fan control pin (PWM)
+int led = 8;          // LED indicator
+int tempMin = 10;     // Temperature to start fan (°C)
+int tempMax = 60;     // Temperature for full speed (°C)
+int temp;
+int fanSpeed;
+int fanPercent;
+
+void setup() {
+  pinMode(fan, OUTPUT);
+  pinMode(led, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  temp = readTemp();
+
+  if (temp < tempMin) {
+    fanSpeed = 0;
+    analogWrite(fan, fanSpeed);
+    fanPercent = 0;
+  }
+  else if (temp >= tempMin && temp <= tempMax) {
+    fanSpeed = 1.5 * temp;  // Scale factor to increase fan speed
+    fanPercent = map(temp, tempMin, tempMax, 0, 100);
+    analogWrite(fan, fanSpeed);
+  }
+  else {
+    digitalWrite(led, HIGH);  // Overheat alert
+  }
+
+  if (temp <= tempMax) {
+    digitalWrite(led, LOW);
+  }
+
+  // Serial output for monitoring
+  Serial.print("Temp: ");
+  Serial.print(temp);
+  Serial.print(" C | Fan: ");
+  Serial.print(fanPercent);
+  Serial.println("%");
+
+  delay(500);
+}
+
+int readTemp() {
+  int reading = analogRead(tempPin);
+  return reading * 0.48828125;  // Convert to °C
+}
